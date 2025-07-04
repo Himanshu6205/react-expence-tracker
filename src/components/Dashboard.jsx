@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { sendEmailVerification } from "../api/authApi";
-import { addExpense, getAllExpenses } from "../api/expenseApi";
+import {
+  addExpense,
+  getAllExpenses,
+  deleteExpense,
+  updateExpense,
+} from "../api/expenseApi";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [msg, setMsg] = useState("");
-
   const [expenses, setExpenses] = useState([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -15,7 +19,12 @@ export default function Dashboard() {
   const token = localStorage.getItem("token");
   const userId = localStorage.getItem("userId");
 
-  // ✅ Get expenses on mount
+  // ✅ For editing
+  const [editingId, setEditingId] = useState(null);
+  const [editAmount, setEditAmount] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editCategory, setEditCategory] = useState("");
+
   useEffect(() => {
     const fetchExpenses = async () => {
       try {
@@ -52,18 +61,11 @@ export default function Dashboard() {
     e.preventDefault();
     if (!amount || !description || !category) return;
 
-    const newExpense = {
-      amount,
-      description,
-      category,
-    };
+    const newExpense = { amount, description, category };
 
     try {
       const data = await addExpense(newExpense, token, userId);
-      console.log("Added expense:", data);
-
       setExpenses((prev) => [...prev, { id: data.name, ...newExpense }]);
-
       setAmount("");
       setDescription("");
       setCategory("Food");
@@ -72,9 +74,43 @@ export default function Dashboard() {
     }
   };
 
+  const handleDeleteExpense = async (id) => {
+    try {
+      await deleteExpense(id, token, userId);
+      setExpenses((prev) => prev.filter((exp) => exp.id !== id));
+      console.log("Expense successfully deleted");
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleEditExpense = (exp) => {
+    setEditingId(exp.id);
+    setEditAmount(exp.amount);
+    setEditDescription(exp.description);
+    setEditCategory(exp.category);
+  };
+
+  const handleSubmitEdit = async (id) => {
+    const updated = {
+      amount: editAmount,
+      description: editDescription,
+      category: editCategory,
+    };
+
+    try {
+      await updateExpense(id, updated, token, userId);
+      setExpenses((prev) =>
+        prev.map((exp) => (exp.id === id ? { id, ...updated } : exp))
+      );
+      setEditingId(null);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-8 bg-yellow-50 relative">
-      {/* ✅ Logout */}
       <button
         onClick={handleLogout}
         className="absolute top-4 right-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
@@ -102,7 +138,6 @@ export default function Dashboard() {
 
       {msg && <p className="mt-4 text-green-800 font-semibold">{msg}</p>}
 
-      {/* ✅ Expense Form */}
       <div className="w-full max-w-md mt-8 bg-white p-6 rounded shadow-md">
         <h2 className="text-xl font-bold mb-4">Add Daily Expense</h2>
         <form onSubmit={handleAddExpense} className="space-y-4">
@@ -140,7 +175,6 @@ export default function Dashboard() {
         </form>
       </div>
 
-      {/* ✅ Expenses List */}
       <div className="w-full max-w-md mt-8">
         <h2 className="text-xl font-bold mb-4">Your Expenses</h2>
         {expenses.length === 0 ? (
@@ -150,13 +184,69 @@ export default function Dashboard() {
             {expenses.map((exp) => (
               <li
                 key={exp.id}
-                className="border p-3 rounded flex justify-between items-center bg-white shadow-sm"
+                className="border p-3 rounded bg-white shadow-sm space-y-2"
               >
-                <div>
-                  <p className="font-semibold">₹ {exp.amount}</p>
-                  <p className="text-sm">{exp.description}</p>
-                  <p className="text-xs text-gray-500">{exp.category}</p>
-                </div>
+                {editingId === exp.id ? (
+                  <>
+                    <input
+                      type="number"
+                      className="w-full p-1 border rounded mb-1"
+                      value={editAmount}
+                      onChange={(e) => setEditAmount(e.target.value)}
+                    />
+                    <input
+                      type="text"
+                      className="w-full p-1 border rounded mb-1"
+                      value={editDescription}
+                      onChange={(e) => setEditDescription(e.target.value)}
+                    />
+                    <select
+                      className="w-full p-1 border rounded mb-1"
+                      value={editCategory}
+                      onChange={(e) => setEditCategory(e.target.value)}
+                    >
+                      <option value="Food">Food</option>
+                      <option value="Petrol">Petrol</option>
+                      <option value="Salary">Salary</option>
+                      <option value="Entertainment">Entertainment</option>
+                      <option value="Shopping">Shopping</option>
+                    </select>
+                    <button
+                      onClick={() => handleSubmitEdit(exp.id)}
+                      className="px-2 py-1 bg-green-500 text-white rounded"
+                    >
+                      Save
+                    </button>
+                    <button
+                      onClick={() => setEditingId(null)}
+                      className="ml-2 px-2 py-1 bg-gray-400 text-white rounded"
+                    >
+                      Cancel
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <p className="font-semibold">₹ {exp.amount}</p>
+                      <p className="text-sm">{exp.description}</p>
+                      <p className="text-xs text-gray-500">{exp.category}</p>
+                    </div>
+                    <div className="flex space-x-2 mt-2">
+                      <button
+                        onClick={() => handleEditExpense(exp)}
+                        className="px-2 py-1 bg-yellow-500 text-white rounded"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteExpense(exp.id)}
+                        className="px-2 py-1 bg-red-500 text-white rounded"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </>
+                )}
               </li>
             ))}
           </ul>

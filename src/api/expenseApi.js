@@ -1,8 +1,6 @@
-// ✅ src/api/expenseApi.js
-
 const DB_URL = import.meta.env.VITE_FIREBASE_DB_URL;
 
-// ✅ ADD expense
+// ✅ Add Expense
 export const addExpense = async (expense, idToken, userId) => {
   const res = await fetch(`${DB_URL}/expenses/${userId}.json?auth=${idToken}`, {
     method: "POST",
@@ -17,7 +15,7 @@ export const addExpense = async (expense, idToken, userId) => {
   return res.json(); // { name: "-Mxyz123..." }
 };
 
-// ✅ GET all expenses
+// ✅ Get All Expenses
 export const getAllExpenses = async (idToken, userId) => {
   const res = await fetch(`${DB_URL}/expenses/${userId}.json?auth=${idToken}`);
   const data = await res.json();
@@ -27,4 +25,26 @@ export const getAllExpenses = async (idToken, userId) => {
     id,
     ...value,
   }));
+};
+
+// ✅ Delete Expense
+export const deleteExpense = async (expenseId, idToken, userId) => {
+  const res = await fetch(
+    `${DB_URL}/expenses/${userId}/${expenseId}.json?auth=${idToken}`,
+    { method: "DELETE" }
+  );
+  if (!res.ok) throw new Error("Failed to delete expense");
+};
+
+// ✅ Update Expense
+export const updateExpense = async (expenseId, updatedData, idToken, userId) => {
+  const res = await fetch(
+    `${DB_URL}/expenses/${userId}/${expenseId}.json?auth=${idToken}`,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updatedData),
+    }
+  );
+  if (!res.ok) throw new Error("Failed to update expense");
 };
