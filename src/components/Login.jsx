@@ -1,3 +1,4 @@
+// src/components/Login.jsx
 import React, { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
@@ -6,19 +7,26 @@ import { useNavigate } from "react-router-dom";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    setError("");
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+
+      // ✅ Get the token & store it (localStorage for now)
+      const token = await userCredential.user.getIdToken();
+      localStorage.setItem("token", token);
+
       console.log("User has successfully logged in.");
-      navigate("/"); // ✅ Redirect after login
-    } catch (err) {
-      setError(err.message);
+      navigate("/dashboard"); // ✅ redirect to dummy welcome screen
+    } catch (error) {
+      alert(error.message); // ✅ Alert on wrong credentials
     }
   };
 
@@ -44,8 +52,6 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
-          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
-
           <button
             type="submit"
             className={`w-full py-2 bg-blue-600 text-white rounded ${
@@ -60,7 +66,7 @@ export default function Login() {
         </form>
 
         <p className="mt-4 text-center">
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
           <a href="/signup" className="text-blue-600 underline">
             Sign Up
           </a>
