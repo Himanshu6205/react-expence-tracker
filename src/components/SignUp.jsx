@@ -1,13 +1,13 @@
-// src/components/SignUp.jsx
 import React, { useState } from "react";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase"; // Adjust path if needed
+import { useNavigate } from "react-router-dom";
+import { signUpUser } from "../api/authApi";
 
 export default function SignUp() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate();
 
   const handleSignUp = async (e) => {
     e.preventDefault();
@@ -19,8 +19,11 @@ export default function SignUp() {
     }
 
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      console.log("User has successfully signed up.");
+      const data = await signUpUser(email, password);
+      localStorage.setItem("token", data.idToken);
+      localStorage.setItem("userId", data.localId);
+      console.log("User has successfully signed up:", data);
+      navigate("/login");
     } catch (err) {
       setError(err.message);
     }
@@ -59,19 +62,19 @@ export default function SignUp() {
 
           <button
             type="submit"
+            disabled={isFormInvalid}
             className={`w-full py-2 bg-blue-600 text-white rounded ${
               isFormInvalid
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-blue-700"
             }`}
-            disabled={isFormInvalid}
           >
             Sign Up
           </button>
         </form>
 
         <p className="mt-4 text-center">
-          Have an account?{" "}
+          Already have an account?{" "}
           <a href="/login" className="text-blue-600 underline">
             Login
           </a>

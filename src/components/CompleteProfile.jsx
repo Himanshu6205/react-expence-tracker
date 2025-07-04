@@ -1,8 +1,6 @@
-// src/components/CompleteProfile.jsx
 import React, { useState } from "react";
-import { auth } from "../firebase";
-import { updateProfile } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import { updateUserProfile } from "../api/authApi";
 
 export default function CompleteProfile() {
   const [displayName, setDisplayName] = useState("");
@@ -10,29 +8,21 @@ export default function CompleteProfile() {
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleUpdateProfile = async (e) => {
+  const handleUpdate = async (e) => {
     e.preventDefault();
     setError("");
 
-    if (!auth.currentUser) {
-      setError("No user is logged in.");
-      return;
-    }
-
     try {
-      await updateProfile(auth.currentUser, {
-        displayName,
-        photoURL,
-      });
-
+      const token = localStorage.getItem("token");
+      await updateUserProfile(token, displayName, photoURL);
       console.log("Profile updated successfully.");
-      // Redirect back or show success message
       navigate("/dashboard");
     } catch (err) {
-      console.error(err);
       setError(err.message);
     }
   };
+
+  const isFormInvalid = !displayName || !photoURL;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-blue-50">
@@ -40,7 +30,7 @@ export default function CompleteProfile() {
         <h2 className="text-center text-2xl font-bold mb-6">
           Complete Profile
         </h2>
-        <form onSubmit={handleUpdateProfile} className="space-y-4">
+        <form onSubmit={handleUpdate} className="space-y-4">
           <input
             type="text"
             placeholder="Display Name"
@@ -60,7 +50,12 @@ export default function CompleteProfile() {
 
           <button
             type="submit"
-            className="w-full py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            disabled={isFormInvalid}
+            className={`w-full py-2 bg-blue-600 text-white rounded ${
+              isFormInvalid
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:bg-blue-700"
+            }`}
           >
             Update
           </button>

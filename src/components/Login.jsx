@@ -1,32 +1,25 @@
-// src/components/Login.jsx
 import React, { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
 import { useNavigate } from "react-router-dom";
+import { loginUser } from "../api/authApi";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
 
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-
-      // ✅ Get the token & store it (localStorage for now)
-      const token = await userCredential.user.getIdToken();
-      localStorage.setItem("token", token);
-
-      console.log("User has successfully logged in.");
-      navigate("/dashboard"); // ✅ redirect to dummy welcome screen
-    } catch (error) {
-      alert(error.message); // ✅ Alert on wrong credentials
+      const data = await loginUser(email, password);
+      localStorage.setItem("token", data.idToken);
+      localStorage.setItem("userId", data.localId);
+      console.log("User has successfully logged in:", data);
+      navigate("/dashboard");
+    } catch (err) {
+      setError(err.message);
     }
   };
 
@@ -52,21 +45,23 @@ export default function Login() {
             onChange={(e) => setPassword(e.target.value)}
           />
 
+          {error && <p className="text-red-500 text-sm text-center">{error}</p>}
+
           <button
             type="submit"
+            disabled={isFormInvalid}
             className={`w-full py-2 bg-blue-600 text-white rounded ${
               isFormInvalid
                 ? "opacity-50 cursor-not-allowed"
                 : "hover:bg-blue-700"
             }`}
-            disabled={isFormInvalid}
           >
             Login
           </button>
         </form>
 
         <p className="mt-4 text-center">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <a href="/signup" className="text-blue-600 underline">
             Sign Up
           </a>
