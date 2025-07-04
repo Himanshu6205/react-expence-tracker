@@ -1,73 +1,80 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { sendEmailVerification } from "../api/authApi";
+import { addExpense, getAllExpenses } from "../api/expenseApi";
 
 export default function Dashboard() {
-  const [msg, setMsg] = useState("");
   const navigate = useNavigate();
+  const [msg, setMsg] = useState("");
 
-  // ✅ LOGOUT FUNCTION
+  const [expenses, setExpenses] = useState([]);
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Food");
+
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
+
+  // ✅ Get expenses on mount
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const data = await getAllExpenses(token, userId);
+        setExpenses(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchExpenses();
+  }, [token, userId]);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     navigate("/login");
   };
 
-  // ✅ VERIFY EMAIL FUNCTION
-  const handleVerifyEmail = async () => {
-    setMsg("");
-    const token = localStorage.getItem("token");
-
-    try {
-      await sendEmailVerification(token);
-      console.log("Verification email sent:", data);
-      setMsg("✅ Verification email sent! Please check your inbox.");
-    } catch (err) {
-      console.error(err);
-      if (err.message === "INVALID_ID_TOKEN") {
-        setMsg("❌ Session expired. Please login again.");
-      } else if (err.message === "USER_DISABLED") {
-        setMsg("❌ This user account is disabled.");
-      } else if (err.message === "EMAIL_NOT_FOUND") {
-        setMsg("❌ Email not found.");
-      } else {
-        setMsg(`❌ ${err.message}`);
-      }
-    }
-  };
-
   const handleCompleteProfile = () => {
     navigate("/complete-profile");
   };
 
-  // ✅ EXPENSE STATE (Local)
-  const [expenses, setExpenses] = useState([]);
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("Food");
+  const handleVerifyEmail = async () => {
+    setMsg("");
+    try {
+      await sendEmailVerification(token);
+      setMsg("✅ Verification email sent! Check your inbox.");
+    } catch (err) {
+      setMsg(`❌ ${err.message}`);
+    }
+  };
 
-  const handleAddExpense = (e) => {
+  const handleAddExpense = async (e) => {
     e.preventDefault();
     if (!amount || !description || !category) return;
 
     const newExpense = {
-      id: Date.now(),
       amount,
       description,
       category,
     };
 
-    setExpenses((prev) => [...prev, newExpense]);
+    try {
+      const data = await addExpense(newExpense, token, userId);
+      console.log("Added expense:", data);
 
-    // Clear form
-    setAmount("");
-    setDescription("");
-    setCategory("Food");
+      setExpenses((prev) => [...prev, { id: data.name, ...newExpense }]);
+
+      setAmount("");
+      setDescription("");
+      setCategory("Food");
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start pt-8 bg-yellow-50 relative">
-      {/* ✅ LOGOUT BUTTON */}
+      {/* ✅ Logout */}
       <button
         onClick={handleLogout}
         className="absolute top-4 right-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
@@ -95,10 +102,9 @@ export default function Dashboard() {
 
       {msg && <p className="mt-4 text-green-800 font-semibold">{msg}</p>}
 
-      {/* ✅ ADD EXPENSE FORM */}
+      {/* ✅ Expense Form */}
       <div className="w-full max-w-md mt-8 bg-white p-6 rounded shadow-md">
         <h2 className="text-xl font-bold mb-4">Add Daily Expense</h2>
-
         <form onSubmit={handleAddExpense} className="space-y-4">
           <input
             type="number"
@@ -107,7 +113,6 @@ export default function Dashboard() {
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
           />
-
           <input
             type="text"
             placeholder="Description"
@@ -115,7 +120,6 @@ export default function Dashboard() {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
           />
-
           <select
             className="w-full p-2 border rounded"
             value={category}
@@ -127,7 +131,6 @@ export default function Dashboard() {
             <option value="Entertainment">Entertainment</option>
             <option value="Shopping">Shopping</option>
           </select>
-
           <button
             type="submit"
             className="w-full py-2 bg-green-600 text-white rounded hover:bg-green-700"
@@ -137,7 +140,7 @@ export default function Dashboard() {
         </form>
       </div>
 
-      {/* ✅ EXPENSE LIST */}
+      {/* ✅ Expenses List */}
       <div className="w-full max-w-md mt-8">
         <h2 className="text-xl font-bold mb-4">Your Expenses</h2>
         {expenses.length === 0 ? (
