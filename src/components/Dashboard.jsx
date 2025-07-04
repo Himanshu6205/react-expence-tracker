@@ -6,8 +6,16 @@ export default function Dashboard() {
   const [msg, setMsg] = useState("");
   const navigate = useNavigate();
 
+  // ✅ LOGOUT FUNCTION
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    navigate("/login");
+  };
+
+  // ✅ VERIFY EMAIL FUNCTION
   const handleVerifyEmail = async () => {
-    setMsg(""); // Clear old msg
+    setMsg("");
     const token = localStorage.getItem("token");
 
     try {
@@ -16,7 +24,6 @@ export default function Dashboard() {
       setMsg("✅ Verification email sent! Please check your inbox.");
     } catch (err) {
       console.error(err);
-      // REST API error handling
       if (err.message === "INVALID_ID_TOKEN") {
         setMsg("❌ Session expired. Please login again.");
       } else if (err.message === "USER_DISABLED") {
@@ -29,12 +36,22 @@ export default function Dashboard() {
     }
   };
 
+  // ✅ COMPLETE PROFILE FUNCTION
   const handleCompleteProfile = () => {
     navigate("/complete-profile");
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-yellow-50">
+    <div className="min-h-screen flex flex-col items-center justify-start pt-8 bg-yellow-50 relative">
+      {/* ✅ LOGOUT BUTTON */}
+      <button
+        onClick={handleLogout}
+        className="absolute top-4 right-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+      >
+        Logout
+      </button>
+
+      {/* ✅ Main Dashboard Content */}
       <h1 className="text-2xl font-bold mb-4 text-yellow-800">
         Your profile is incomplete
       </h1>

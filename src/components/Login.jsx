@@ -66,6 +66,11 @@ export default function Login() {
             Sign Up
           </a>
         </p>
+        <p className="mt-4 text-center">
+          <a href="/forgot-password" className="text-blue-600 underline">
+            Forgot Password?
+          </a>
+        </p>
       </div>
     </div>
   );
