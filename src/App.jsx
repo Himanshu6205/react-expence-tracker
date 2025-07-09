@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { lazy, Suspense } from "react";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
-import ChatBot from "./components/ChatBot/ChatBot"; // ✅ Add this import
+import ChatBot from "./components/chatbot/ChatBot";
 
 const LoginPage = lazy(() => import("./pages/LoginPage"));
 const SignupPage = lazy(() => import("./pages/SignupPage"));
@@ -18,11 +18,10 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Expenses = lazy(() => import("./pages/Expenses"));
 
 function App() {
-  const isDark = useSelector((state) => state.theme.isDarkMode);
-  const token = useSelector((state) => state.auth.token); // ✅ New
+  const token = useSelector((state) => state.auth.token);
 
   return (
-    <div className={isDark ? "dark" : ""}>
+    <div>
       <ToastContainer position="top-right" autoClose={3000} />
       <Router>
         <Header />
@@ -91,6 +90,7 @@ function App() {
         </Suspense>
         <Footer />
 
+        {/* ✅ ChatBot only shows when logged in */}
         {token && <ChatBot />}
       </Router>
     </div>
