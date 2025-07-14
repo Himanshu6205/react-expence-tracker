@@ -1,7 +1,7 @@
 import { useState } from "react";
 import FAQs from "./faqs";
 import findBestFAQ from "./findBestFAQ";
-import { X } from "lucide-react"; // Lucide close icon
+import { X } from "lucide-react";
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);

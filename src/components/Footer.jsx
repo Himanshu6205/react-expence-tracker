@@ -11,26 +11,6 @@ const Footer = () => {
 
         <div className="flex items-center gap-6">
           <a
-            href="https://github.com/yourusername"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-indigo-400 transition-colors flex items-center gap-1"
-          >
-            <Github size={18} />
-            GitHub
-          </a>
-
-          <a
-            href="https://www.linkedin.com/in/yourprofile"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-indigo-400 transition-colors flex items-center gap-1"
-          >
-            <Linkedin size={18} />
-            LinkedIn
-          </a>
-
-          <a
             href="mailto:youremail@example.com"
             target="_blank"
             rel="noopener noreferrer"
